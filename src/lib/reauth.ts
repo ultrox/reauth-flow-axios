@@ -37,6 +37,7 @@ function setShowAuthUI(fn: () => void) {
 function authComplete() {
   const queued = [...waiters];
   waiters.length = 0;
+
   isAuthInProgress = false;
   hasShownAuthUI = false;
 
@@ -71,12 +72,16 @@ function queueAndReplay(cfg: AxiosRequestConfig) {
   return new Promise((resolve, reject) => {
     waiters.push({ resolve, reject, cfg });
 
-    // set single flight lock
+    // we need to set single flight lock here becouse
+    // first 401 will trigger the UI popup, from there
+    // we only need to silantly enqueue the request
+    // and not show popup again
     if (!isAuthInProgress) {
       isAuthInProgress = true;
+
       if (!hasShownAuthUI && showAuthUI) {
         hasShownAuthUI = true;
-        showAuthUI(); // you control the UI & flow
+        showAuthUI(); // controls the UI & flow
       }
     }
 
